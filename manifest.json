@@ -12,7 +12,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://brain.hankyu-travel.com/*", "http://localhost/*"], 
+      "matches": ["*://10.94.13.201/*", "*://brain.hankyu-travel.com/*", "http://localhost/*"], 
       "js": ["content.js"],
       "all_frames": true
     }
