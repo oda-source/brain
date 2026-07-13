@@ -45,12 +45,12 @@ startBtn.addEventListener('click', async () => {
 
   const fileNames = selectedFiles.map(file => file.name);
 
-  // 拡張機能を起動した「元のBrain画面」のタブを探す
+  // 拡張機能を起動した「元のBrain画面」のタブを探す（IPアドレスとドメインの両方に対応）
   const tabs = await chrome.tabs.query({});
-  const brainTab = tabs.find(t => t.url && t.url.includes('brain.hankyu-travel.com'));
+  const brainTab = tabs.find(t => t.url && (t.url.includes('10.94.13.201') || t.url.includes('brain.hankyu-travel.com')));
   
   if (!brainTab) {
-    alert('Brainの管理画面（brain.hankyu-travel.com）が見つかりません。画面を開いた状態で実行してください。');
+    alert('Brainの管理画面（10.94.13.201）が見つかりません。画面を開いた状態で実行してください。');
     return;
   }
 
