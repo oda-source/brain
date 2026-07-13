@@ -1,7 +1,5 @@
-// 【重要】メインの入力フォームがあるページ（部屋）以外ではプログラムを動かさないようにする
-// URLに continuous が含まれていない場合は、即座に処理を終了します
-if (!window.location.href.includes('continuous')) {
-  // 何もしない
+if (!window.location.href.includes('continuous') && !document.querySelector('form')) {
+  // 登録用のフォームが存在しないページでは動作させない
 } else {
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -33,7 +31,7 @@ if (!window.location.href.includes('continuous')) {
     panel.innerHTML = `
       <h4 style="margin:0 0 10px 0; color:#007bff;">Brain 自動登録ナビ</h4>
       <div id="ext-info-content" style="font-size:13px; line-height:1.5; margin-bottom:15px; color:#333;">
-        準備中...
+        画面の読み込みとフォームの検出を待っています...
       </div>
       <div style="display:flex; gap:10px;">
         <button id="ext-btn-ok" style="flex:1; padding:8px; background:#28a745; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">次へ（確認終了）</button>
@@ -41,6 +39,38 @@ if (!window.location.href.includes('continuous')) {
       </div>
     `;
     document.body.appendChild(panel);
+  }
+
+  // 確実に入力イベントを発生させる関数
+  function forceInputValue(inputElement, value) {
+    if (!inputElement) return;
+    inputElement.focus();
+    inputElement.value = value;
+    const events = ['input', 'change', 'propertychange', 'keyup', 'keydown', 'blur'];
+    events.forEach(eventName => {
+      inputElement.dispatchEvent(new Event(eventName, { bubbles: true, cancelable: true }));
+    });
+    inputElement.blur();
+  }
+
+  // ドロップダウン（セレクトボックス）を値（value）または表示テキストで確実に選択する関数
+  function forceSelectValue(selectElement, targetText, targetValue) {
+    if (!selectElement) return;
+    selectElement.focus();
+    
+    let matched = false;
+    for (let i = 0; i < selectElement.options.length; i++) {
+      if (selectElement.options[i].value === targetValue || selectElement.options[i].text.includes(targetText)) {
+        selectElement.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    
+    if (matched) {
+      selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+      selectElement.blur();
+    }
   }
 
   async function processFile(fileNames, index, commonData) {
@@ -65,82 +95,66 @@ if (!window.location.href.includes('continuous')) {
     }
     const courseNumber = fileNameParts[1];
 
-    // --- メインフォームへの総当たり入力 ---
+    // 画面上のすべてのテキスト入力欄を取得（順番ベースでの確実な突合用）
+    const allTextInputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
     
-    // 1. 媒体コード
-    const mediaInputs = document.querySelectorAll('input[name*="media"], input[id*="media"], input[type="text"]');
-    if (mediaInputs.length > 0) {
-      mediaInputs[0].value = commonData.mediaCode;
-      mediaInputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-      mediaInputs[0].dispatchEvent(new Event('change', { bubbles: true }));
+    if (allTextInputs.length < 2) {
+      infoContent.innerHTML = "<b style='color:#dc3545;'>エラー: 入力フォームが検出できません。</b><br>ページを再読み込み(F5)してやり直してください。";
+      return;
     }
 
-    // 2. コース番号
-    const courseInputs = document.querySelectorAll('input[name*="course"], input[id*="course"]');
-    if (courseInputs.length > 0) {
-      courseInputs.forEach(input => {
-        input.value = courseNumber;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    } else if (mediaInputs.length > 1) {
-      // 適切な名前が見つからない場合のフォールバック（画面の下の方にあるテキスト欄）
-      const possibleCourseInput = mediaInputs[mediaInputs.length - 1];
-      possibleCourseInput.value = courseNumber;
-      possibleCourseInput.dispatchEvent(new Event('input', { bubbles: true }));
-      possibleCourseInput.dispatchEvent(new Event('change', { bubbles: true }));
+    // --- 【確定HTML解析に基づく自動入力】 ---
+    
+    // 1. 媒体コード（画面の最上部にある1番目のテキスト入力欄）
+    const mediaInput = allTextInputs[0];
+    if (mediaInput) {
+      forceInputValue(mediaInput, commonData.mediaCode);
     }
 
-    // 3. 発送日
-    const dateInputs = document.querySelectorAll('input[type="date"], input[name*="hassou"], input[name*="date"]');
-    if (dateInputs.length > 0) {
-      dateInputs.forEach(input => {
-        input.value = commonData.shipDate.replace(/-/g, ''); // YYYYMMDD形式
-        if(!input.value) input.value = commonData.shipDate; 
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    } else {
-      // 日付の入力欄がテキストタイプ（type="text"）の場合の総当たり検索
-      mediaInputs.forEach(input => {
-        if (input.placeholder && input.placeholder.includes('例')) {
-          input.value = commonData.shipDate.replace(/-/g, '');
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
+    // 2. コース番号（画面最下部の「コース番号※」の横にある入力欄）
+    // デベロッパーツール画像より、name="course_no" または最後の方の入力欄
+    const courseInput = document.querySelector('input[name="course_no"]') || document.querySelector('input[name*="course"]') || allTextInputs[allTextInputs.length - 1];
+    if (courseInput) {
+      forceInputValue(courseInput, courseNumber);
+    }
+
+    // 3. 発送日（カレンダー横の入力欄、あるいはname="hassou_ymd"）
+    // テキスト入力欄の中から「例」というプレースホルダーがあるもの、または2026等の初期値が入っている欄を自動スキャン
+    const cleanDate = commonData.shipDate ? commonData.shipDate.replace(/-/g, '') : "";
+    const dateInput = document.querySelector('input[name="hassou_ymd"]') || document.getElementById('hassou_ymd') || allTextInputs.find(input => input.placeholder && input.placeholder.includes('例')) || allTextInputs[2];
+    if (dateInput && cleanDate) {
+      forceInputValue(dateInput, cleanDate);
     }
 
     // 4. 部数
-    const volumeInputs = document.querySelectorAll('input[name*="busu"], input[name*="vol"]');
-    volumeInputs.forEach(input => {
-      input.value = commonData.volume;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    const volumeInput = document.querySelector('input[name="busu"]') || document.getElementById('busu') || allTextInputs[3];
+    if (volumeInput && commonData.volume) {
+      forceInputValue(volumeInput, commonData.volume);
+    }
 
-    // 5. 固定値（営業本部・出発地）
-    const selects = document.querySelectorAll('select');
-    selects.forEach(select => {
-      if (select.options.length > 1) {
-        select.selectedIndex = 1; // 上から2番目を選択
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
+    // 5. 【固定値】営業本部 ➔ 画像の「input_honbu_cd」をピンポイント指定
+    const honbuSelect = document.querySelector('select[name="input_honbu_cd"]') || document.querySelector('select[name*="honbu"]') || document.querySelector('select');
+    forceSelectValue(honbuSelect, "メディア営業本部", "15");
 
-    // 6. ファイル名表示欄
-    const fileInputs = document.querySelectorAll('input[name*="file"], input[id*="file"]');
-    fileInputs.forEach(input => {
-      if (input.type === 'text') {
-        input.value = currentFileName;
-      }
-    });
+    // 6. 【固定値】出発地 ➔ 画像の「input_shuppatsu_cd」をピンポイント指定
+    const syuppatsuSelect = document.querySelector('select[name="input_shuppatsu_cd"]') || document.querySelector('select[name*="shuppatsu"]') || document.querySelectorAll('select')[1];
+    forceSelectValue(syuppatsuSelect, "関西", "02");
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // 7. ファイル名表示欄（もし存在すれば）
+    const fileNameDisplayInput = document.querySelector('input[name="file_name"]') || document.querySelector('input[name*="file"]');
+    if (fileNameDisplayInput) {
+      forceInputValue(fileNameDisplayInput, currentFileName);
+    }
 
+    // サイト側JavaScriptの連動処理を少し待つ（0.5秒）
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // ナビゲーションパネルのテキスト表示を更新
     infoContent.innerHTML = `
       <b>処理中:</b> ${index + 1} / ${fileNames.length} 件目<br>
       <b>ファイル名:</b> <span style="color:#555;">${currentFileName}</span><br>
       <b>抽出コース番号:</b> <span style="color:#d9534f; font-weight:bold;">${courseNumber}</span><br><br>
-      <span style="color:#28a745; font-size:12px; font-weight:bold;">左側のフォームに文字が自動入力されたか確認してください。</span>
+      <span style="color:#28a745; font-size:12px; font-weight:bold;">左側のフォームをご確認ください。<br>文字が自動入力され、営業本部と出発地が選択されていれば成功です！</span>
     `;
 
     return new Promise((resolve) => {
