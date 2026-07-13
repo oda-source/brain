@@ -1,20 +1,15 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "START_AUTOMATION") {
     const { mediaCode, shipDate, volume, fileNames } = request.data;
-    
-    // 画面上に確認用の案内パネルを差し込む
     createConfirmPanel();
-    
     processFile(fileNames, 0, { mediaCode, shipDate, volume });
     sendResponse({ status: "started" });
   }
   return true;
 });
 
-// 画面内に固定で表示する確認用の「操作パネル」を作成する関数
 function createConfirmPanel() {
   if (document.getElementById('ext-confirm-panel')) return;
-
   const panel = document.createElement('div');
   panel.id = 'ext-confirm-panel';
   panel.style.position = 'fixed';
@@ -42,7 +37,6 @@ function createConfirmPanel() {
   document.body.appendChild(panel);
 }
 
-// ファイルを1件ずつ順番に処理する関数
 async function processFile(fileNames, index, commonData) {
   const panel = document.getElementById('ext-confirm-panel');
   const infoContent = document.getElementById('ext-info-content');
@@ -65,78 +59,95 @@ async function processFile(fileNames, index, commonData) {
   }
   const courseNumber = fileNameParts[1];
 
-  // --- フォームへの自動入力 ---
-  // 1. 媒体コード
-  const mediaInput = document.querySelector('input[placeholder*="媒体コード"]') || document.querySelector('input[name*="code"]');
-  if (mediaInput) {
-    mediaInput.value = commonData.mediaCode;
-    mediaInput.dispatchEvent(new Event('input', { bubbles: true }));
-    mediaInput.dispatchEvent(new Event('change', { bubbles: true }));
-    mediaInput.blur();
+  // --- HTML解析に基づいた正確なフォーム自動入力 ---
+  try {
+    // 1. 媒体コード
+    const mediaInput = document.querySelector('input[name="media_cd"]') || document.getElementById('media_cd');
+    if (mediaInput) {
+      mediaInput.value = commonData.mediaCode;
+      mediaInput.dispatchEvent(new Event('input', { bubbles: true }));
+      mediaInput.dispatchEvent(new Event('change', { bubbles: true }));
+      mediaInput.blur(); // フォーカスを外してサイト側の「媒体名」自動読み込みをキック
+    }
+
+    // 2. コース番号
+    const courseInput = document.querySelector('input[name="course_no"]') || document.getElementById('course_no');
+    if (courseInput) {
+      courseInput.value = courseNumber;
+      courseInput.dispatchEvent(new Event('input', { bubbles: true }));
+      courseInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // 3. 発送日
+    const dateInput = document.querySelector('input[name="hassou_ymd"]') || document.getElementById('hassou_ymd');
+    if (dateInput && commonData.shipDate) {
+      // 日付フォーマットの調整（YYYY-MM-DD から YYYYMMDD への変換が必要な場合に対応）
+      const formattedDate = commonData.shipDate.replace(/-/g, '');
+      dateInput.value = formattedDate;
+      dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // 4. 部数
+    const volumeInput = document.querySelector('input[name="busu"]') || document.getElementById('busu');
+    if (volumeInput && commonData.volume) {
+      volumeInput.value = commonData.volume;
+      volumeInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // 5. 営業本部（固定値選択）
+    const honbuSelect = document.querySelector('select[name="honbu_cd"]') || document.getElementById('honbu_cd');
+    if (honbuSelect) {
+      // 毎回決まった項目を選びたい場合、現在の「何番目か（0から数える）」を指定します。
+      // 例: 2番目の項目なら 1 を指定。適宜数字を変更してください。
+      honbuSelect.selectedIndex = 1; 
+      honbuSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // 6. 出発地（固定値選択）
+    const syuppatsuSelect = document.querySelector('select[name="shuppatsu_cd"]') || document.getElementById('shuppatsu_cd');
+    if (syuppatsuSelect) {
+      // 例: 2番目の項目なら 1 を指定。適宜数字を変更してください。
+      syuppatsuSelect.selectedIndex = 1;
+      syuppatsuSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // 7. ファイル名（表示欄）
+    const fileNameDisplayInput = document.querySelector('input[name="file_name"]') || document.getElementById('file_name');
+    if (fileNameDisplayInput) {
+      fileNameDisplayInput.value = currentFileName;
+    }
+
+  } catch (e) {
+    console.error("入力中にエラーが発生しました:", e);
   }
 
-  // 2. コース番号
-  const courseInput = document.querySelector('input[placeholder*="コース番号"]') || document.querySelector('input[name*="course"]');
-  if (courseInput) {
-    courseInput.value = courseNumber;
-    courseInput.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+  // サイト側のJavaScript連動（媒体名の取得など）を少し待つ（0.5秒）
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-  // 3. 発送日
-  const dateInput = document.querySelector('input[type="date"]') || document.querySelector('input[id*="date"]');
-  if (dateInput && commonData.shipDate) {
-    dateInput.value = commonData.shipDate;
-  }
-
-  // 4. 部数
-  const volumeInput = document.querySelector('input[placeholder*="部数"]') || document.querySelector('input[name*="busu"]');
-  if (volumeInput && commonData.volume) {
-    volumeInput.value = commonData.volume;
-  }
-
-  // 5. 固定値（営業本部・出発地）
-  const mainOfficeSelect = document.querySelector('select[name*="honbu"]') || document.querySelector('select');
-  if (mainOfficeSelect) {
-    mainOfficeSelect.selectedIndex = 1; 
-    mainOfficeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  const departureSelect = document.querySelector('select[name*="shuppatsu"]') || document.querySelectorAll('select')[1];
-  if (departureSelect) {
-    departureSelect.selectedIndex = 1;
-    departureSelect.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  // 6. ダミーファイル名
-  const fileNameDisplayInput = document.querySelector('input[name*="filename"]') || document.querySelector('input[type="text"]');
-  if (fileNameDisplayInput) {
-    fileNameDisplayInput.value = currentFileName;
-  }
-
-  // 画面に入力値が反映されるのを少し待つ（0.3秒）
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  // パネルの文字を更新（これで背景のフォームに入力された状態で確認できます）
+  // 右上のナビゲーションパネルの文字を更新
   infoContent.innerHTML = `
     <b>処理中:</b> ${index + 1} / ${fileNames.length} 件目<br>
     <b>ファイル名:</b> <span style="color:#555;">${currentFileName}</span><br>
     <b>抽出コース番号:</b> <span style="color:#d9534f; font-weight:bold;">${courseNumber}</span><br><br>
-    <span style="color:#666; font-size:12px;">※左側のフォームに入力された内容を確認してください。</span>
+    <span style="color:#28a745; font-size:12px; font-weight:bold;">左側のフォームに文字が自動入力されたことを確認してください。</span>
   `;
 
-  // ボタンのイベントを設定して「人間のクリック待ち」状態にする
+  // ボタンを押すまでの待機処理
   return new Promise((resolve) => {
     document.getElementById('ext-btn-ok').onclick = async () => {
-      // 実際の「一括登録」ボタンを探してクリック
-      const registerBtn = document.querySelector('button.red') || document.querySelector('input[value="一括登録"]') || [...document.querySelectorAll('button, input[type="button"]')].find(el => el.textContent.includes('登録') || el.value.includes('登録'));
+      // HTML解析に基づく正確な「一括登録」ボタンのクリック
+      const registerBtn = document.querySelector('input[value="一括登録"]') || document.querySelector('.btn-red') || document.querySelector('#submit_btn');
       
       if (registerBtn) {
-        // ※完全にテスト完了するまではコメントアウトのままにしてあります。
-        // 実際に自動で登録ボタンを押させたい場合は、下のスラッシュ2つを消してください
+        // 【テスト完了後の自動化】
+        // 実際に人間の代わりに「一括登録」ボタンを自動でカチッと押させたい場合は、
+        // 下の行の先頭にある「//」を消して保存してください。
         // registerBtn.click();
-        console.log("登録ボタンをクリックしました");
+        
+        console.log("一括登録ボタンが認識されました。");
       }
 
-      // 登録処理後、次のファイルへ進む
+      // 次のファイルへ進む
       resolve(processFile(fileNames, index + 1, commonData));
     };
 
