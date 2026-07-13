@@ -5,10 +5,8 @@ const startBtn = document.getElementById('startBtn');
 
 let selectedFiles = [];
 
-// 青い枠をクリックしたらファイル選択を開く
 dropZone.addEventListener('click', () => fileInput.click());
 
-// ファイルが選択されたら情報を保存
 fileInput.addEventListener('change', (e) => {
   selectedFiles = Array.from(e.target.files);
   if (selectedFiles.length > 0) {
@@ -20,13 +18,11 @@ fileInput.addEventListener('change', (e) => {
   }
 });
 
-// 「自動登録を開始する」ボタンを押したときの処理
 startBtn.addEventListener('click', async () => {
   const mediaCode = document.getElementById('mediaCode').value;
   const shipDate = document.getElementById('shipDate').value;
   const volume = document.getElementById('volume').value;
 
-  // バリデーション（媒体コードは必須）
   if (!mediaCode) {
     alert('媒体コードを入力してください。');
     return;
@@ -36,19 +32,20 @@ startBtn.addEventListener('click', async () => {
     return;
   }
 
-  // ファイル名リストを作成（ブラウザの制限上、パスではなく名前だけを操作側に送る）
   const fileNames = selectedFiles.map(file => file.name);
 
-  // 現在開いている旅行会社のタブ（Brain管理画面）を探す
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  // 【変更点】拡張機能を起動した「元のBrain画面」のタブを探す
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  // ポップアップ自身ではない、かつBrainのURLを含んでいるタブを探す
+  const brainTab = tabs.find(t => t.url && (t.url.includes('hankyu') || t.url.includes('localhost')));
   
-  if (!tab) {
-    alert('対象のウェブページが見つかりません。');
+  if (!brainTab) {
+    alert('Brainの管理画面が見つかりません。画面を開いた状態で実行してください。');
     return;
   }
 
-  // 操作用スクリプト（content.js）へ、共通データとファイル名のリストを送信して開始
-  chrome.tabs.sendMessage(tab.id, {
+  // 操作用スクリプト（content.js）へデータを送信
+  chrome.tabs.sendMessage(brainTab.id, {
     action: "START_AUTOMATION",
     data: {
       mediaCode: mediaCode,
@@ -58,9 +55,9 @@ startBtn.addEventListener('click', async () => {
     }
   }, (response) => {
     if (chrome.runtime.lastError) {
-      alert('エラー：Brainの管理画面を開いた状態で、拡張機能を実行してください。');
+      alert('自動化スクリプトの起動に失敗しました。ページを再読み込みしてください。');
     } else {
-      // ポップアップ画面を閉じて、実際の登録画面の自動入力に移る
+      // 処理が始まったらこの入力窓は閉じる
       window.close();
     }
   });
