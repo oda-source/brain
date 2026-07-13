@@ -1,87 +1,74 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      width: 320px;
-      padding: 15px;
-      font-family: sans-serif;
-    }
-    .form-group {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    input[type="text"], input[type="date"], input[type="number"] {
-      width: 100%;
-      padding: 6px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .file-area {
-      margin-top: 15px;
-      padding: 15px;
-      border: 2px dashed #007bff;
-      background: #f8f9fa;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    #status {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #666;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <h3>共通情報入力</h3>
-  
-  <div class="form-group">
-    <label>媒体コード ※必須</label>
-    <input type="text" id="mediaCode" placeholder="例: 12">
-  </div>
-  
-  <div class="form-group">
-    <label>発送日</label>
-    <input type="date" id="shipDate">
-  </div>
-  
-  <div class="form-group">
-    <label>部数</label>
-    <input type="number" id="volume" placeholder="例: 10" min="1">
-  </div>
+// 【追加】もし通常のポップアップとして開かれたら、即座に独立した別ウィンドウで開き直す
+if (!window.location.search.includes('mode=window')) {
+  chrome.windows.create({
+    url: chrome.runtime.getURL("popup.html?mode=window"),
+    type: "popup",
+    width: 360,
+    height: 580
+  });
+  window.close(); // 元の消えちゃうポップアップは一瞬で閉じる
+}
 
-  <div class="file-area" id="dropZone">
-    <span style="font-size: 13px; color: #555;">クリックしてPDFファイルを選択<br>(複数選択可)</span>
-    <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;">
-  </div>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const statusText = document.getElementById('status');
+const startBtn = document.getElementById('startBtn');
+
+let selectedFiles = [];
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  selectedFiles = Array.from(e.target.files);
+  if (selectedFiles.length > 0) {
+    statusText.innerText = `${selectedFiles.length}個のファイルが選択されています`;
+    statusText.style.color = '#28a745';
+  } else {
+    statusText.innerText = 'ファイル未選択';
+    statusText.style.color = '#666';
+  }
+});
+
+startBtn.addEventListener('click', async () => {
+  const mediaCode = document.getElementById('mediaCode').value;
+  const shipDate = document.getElementById('shipDate').value;
+  const volume = document.getElementById('volume').value;
+
+  if (!mediaCode) {
+    alert('媒体コードを入力してください。');
+    return;
+  }
+  if (selectedFiles.length === 0) {
+    alert('登録するPDFファイルを選択してください。');
+    return;
+  }
+
+  const fileNames = selectedFiles.map(file => file.name);
+
+  // 拡張機能を起動した「元のBrain画面」のタブを探す
+  const tabs = await chrome.tabs.query({});
+  const brainTab = tabs.find(t => t.url && t.url.includes('brain.hankyu-travel.com'));
   
-  <div id="status">ファイル未選択</div>
+  if (!brainTab) {
+    alert('Brainの管理画面（brain.hankyu-travel.com）が見つかりません。画面を開いた状態で実行してください。');
+    return;
+  }
 
-  <button id="startBtn">自動登録を開始する</button>
-
-  <script src="popup.js"></script>
-</body>
-</html>
+  // 操作用スクリプト（content.js）へデータを送信
+  chrome.tabs.sendMessage(brainTab.id, {
+    action: "START_AUTOMATION",
+    data: {
+      mediaCode: mediaCode,
+      shipDate: shipDate,
+      volume: volume,
+      fileNames: fileNames
+    }
+  }, (response) => {
+    if (chrome.runtime.lastError) {
+      alert('自動化スクリプトの起動に失敗しました。Brainのページを一度再読み込み（F5）してから再度お試しください。');
+    } else {
+      // 処理が始まったらこの入力窓は閉じる
+      window.close();
+    }
+  });
+});
