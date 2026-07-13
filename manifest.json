@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Brain 自動登録アシスタント",
+  "version": "1.0",
+  "description": "PDFファイル名からコース番号を抽出し、フォームへ自動入力します。",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.hankyu-travel.com/*", "http://localhost/*"], 
+      "js": ["content.js"]
+    }
+  ]
+}
