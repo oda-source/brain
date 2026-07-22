@@ -20,16 +20,49 @@
       .global-check-label.disabled-lock { background: #ebecf0 !important; color: #a5adba !important; }
     }
     
-    .header-area { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .title-zone { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .header-area { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; background: #fff; padding: 10px 14px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .title-zone { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     h1 { font-size: 16px; margin: 0; color: #0079bf; white-space: nowrap; }
     
-    .undo-btn { background: #dddddd; color: #888888; border: 1px solid #cccccc; padding: 4px 10px; font-weight: bold; font-size: 13px; border-radius: 4px; cursor: not-allowed; display: inline-block; transition: all 0.2s ease; white-space: nowrap; }
-    .undo-btn.active { background: #ff9f43; color: white; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    /* 🌟 ボタンのサイズアップとデザイン共通調整 */
+    .history-btn { 
+      background: #e2e8f0; 
+      color: #a0aec0; 
+      border: 1px solid #cbd5e0; 
+      padding: 6px 14px; 
+      font-weight: bold; 
+      font-size: 14px; 
+      border-radius: 4px; 
+      cursor: not-allowed; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 4px; 
+      transition: all 0.2s ease; 
+      white-space: nowrap; 
+    }
+    
+    /* 戻るボタン (有効時：オレンジ) */
+    .undo-btn.active { 
+      background: #ff9f43; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+    }
     .undo-btn.active:hover { background: #ee5a24; }
     
-    .page-setter { font-size: 13px; font-weight: bold; color: #0079bf; white-space: nowrap; display: flex; align-items: center; }
-    .page-setter select { padding: 4px 6px; font-size: 13px; font-weight: bold; border: 2px solid #0079bf; border-radius: 4px; background: #fff; color: #0079bf; cursor: pointer; margin-left: 6px; }
+    /* 🌟 進むボタン (有効時：青) */
+    .redo-btn.active { 
+      background: #0079bf; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+    }
+    .redo-btn.active:hover { background: #026aa7; }
+    
+    .page-setter { font-size: 13px; font-weight: bold; color: #0079bf; white-space: nowrap; display: flex; align-items: center; margin-left: auto; }
+    .page-setter select { padding: 5px 8px; font-size: 13px; font-weight: bold; border: 2px solid #0079bf; border-radius: 4px; background: #fff; color: #0079bf; cursor: pointer; margin-left: 6px; }
     
     .main-layout { display: flex; flex-direction: column; gap: 16px; position: relative; }
     
@@ -49,10 +82,7 @@
     .trello-card.dragging { opacity: 0.4; border: 1px dashed #999; }
     .trello-card.selected { border: 2px solid #0079bf !important; background: #e6f7ff !important; box-shadow: 0 0 8px rgba(0,121,191,0.4); }
 
-    /* 🌟 縦積みカードの高さを均一(min-height: 84px)に指定 */
     .trello-card.layout-vertical { flex: 1 1 100%; width: 100%; min-height: 84px; }
-    
-    /* 横並び用（小文字） */
     .trello-card.layout-horizontal { flex: 1 1 calc(50% - 4px); width: calc(50% - 4px); }
 
     .card-area-badge { display: block; font-size: 14px; font-weight: bold; padding: 4px 6px; text-align: center; color: #172b4d; background: #dfe1e6; pointer-events: none; cursor: inherit; line-height: 1.2; }
@@ -74,7 +104,6 @@
     
     .card-content { padding: 4px 6px 0 6px; flex: 1; display: flex; flex-direction: column; pointer-events: none; cursor: inherit; justify-content: space-between; }
     
-    /* 🌟 タイトル枠の高さを揃える指定(min-height: 34px) */
     .card-name-wrapper { position: relative; padding-right: 18px; margin: 2px 0; cursor: inherit; display: flex; align-items: center; min-height: 34px; }
     .card-name { font-weight: bold; line-height: 1.2; color: #253858; word-break: break-all; font-size: 13px; cursor: inherit; display: inline-flex; align-items: center; gap: 4px; width: 100%; }
     .edit-pencil-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: #0079bf; cursor: pointer !important; font-size: 10px; font-weight: bold; pointer-events: auto; }
@@ -111,7 +140,10 @@
   <div class="header-area">
     <div class="title-zone">
       <h1 id="boardTitle">【極】台割り配置図 3</h1>
-      <button id="undoBtn" class="undo-btn" onclick="executeUndo()">↩️ 戻る (残り <span id="undoCount">0</span>回)</button>
+      <!-- 🌟 大きめの「戻る」ボタン -->
+      <button id="undoBtn" class="history-btn undo-btn" onclick="executeUndo()">↩️ 戻る (<span id="undoCount">0</span>)</button>
+      <!-- 🌟 新設「進む」ボタン -->
+      <button id="redoBtn" class="history-btn redo-btn" onclick="executeRedo()">↪️ 進む (<span id="redoCount">0</span>)</button>
     </div>
     <div class="page-setter">
       パンフレットの総ページ数:
@@ -152,7 +184,9 @@
     let currentTrelloUserFullName = "";
     let uniqueTantouNames = new Set();
     
+    /* 🌟 戻る・進む用のスタック設定 */
     let undoStack = []; 
+    let redoStack = []; 
     const MAX_UNDO_DEPTH = 10;
 
     function handleCardClick(e, cardId) {
@@ -198,6 +232,7 @@
       Promise.all(promises).then(function() { selectedCardIds.clear(); renderCombinedGrid(); });
     }
 
+    /* 🌟 操作時のスナップショット作成（新しい操作があったら進むスタックをクリア） */
     function pushUndoSnapshot() {
       if (!cardList || cardList.length === 0) return;
       const snapshot = cardList.map(c => ({
@@ -207,27 +242,70 @@
       }));
       undoStack.push(snapshot);
       if (undoStack.length > MAX_UNDO_DEPTH) { undoStack.shift(); }
-      updateUndoButtonUI();
+      redoStack = []; // 新しい操作があったら進む履歴をリセット
+      updateHistoryButtonsUI();
     }
 
+    /* 🌟 「戻る」実行関数 */
     function executeUndo() {
       if (undoStack.length === 0) return;
+      
+      // 現在の状態を redoStack に保存
+      const currentSnapshot = cardList.map(c => ({
+        id: c.id,
+        page: c.customPageNumValue,
+        chushi: c.isFromChushiList
+      }));
+      redoStack.push(currentSnapshot);
+
       const previousState = undoStack.pop();
-      const promises = previousState.map(hist => {
-        return t.set(hist.id, 'shared', 'daiwari_page_num', hist.page).then(function() {
-          const foundCard = cardList.find(c => c.id === hist.id);
-          if (foundCard) { foundCard.customPageNumValue = hist.page; foundCard.isFromChushiList = hist.chushi; }
-        });
-      });
-      Promise.all(promises).then(function() { updateUndoButtonUI(); renderCombinedGrid(); });
+      applyStateSnapshot(previousState);
     }
 
-    function updateUndoButtonUI() {
-      const btn = document.getElementById('undoBtn');
-      const counter = document.getElementById('undoCount');
-      if (counter) counter.innerText = undoStack.length;
-      if (btn) {
-        if (undoStack.length > 0) { btn.classList.add('active'); } else { btn.classList.remove('active'); }
+    /* 🌟 「進む（やり直し）」実行関数 */
+    function executeRedo() {
+      if (redoStack.length === 0) return;
+      
+      // 現在の状態を undoStack に保存
+      const currentSnapshot = cardList.map(c => ({
+        id: c.id,
+        page: c.customPageNumValue,
+        chushi: c.isFromChushiList
+      }));
+      undoStack.push(currentSnapshot);
+
+      const nextState = redoStack.pop();
+      applyStateSnapshot(nextState);
+    }
+
+    /* 🌟 スナップショットの適用共通関数 */
+    function applyStateSnapshot(stateArray) {
+      const promises = stateArray.map(hist => {
+        return t.set(hist.id, 'shared', 'daiwari_page_num', hist.page).then(function() {
+          const foundCard = cardList.find(c => c.id === hist.id);
+          if (foundCard) { 
+            foundCard.customPageNumValue = hist.page; 
+            foundCard.isFromChushiList = hist.chushi; 
+          }
+        });
+      });
+      Promise.all(promises).then(function() { updateHistoryButtonsUI(); renderCombinedGrid(); });
+    }
+
+    /* 🌟 戻る・進むボタンの見た目を更新 */
+    function updateHistoryButtonsUI() {
+      const undoBtn = document.getElementById('undoBtn');
+      const undoCounter = document.getElementById('undoCount');
+      if (undoCounter) undoCounter.innerText = undoStack.length;
+      if (undoBtn) {
+        if (undoStack.length > 0) { undoBtn.classList.add('active'); } else { undoBtn.classList.remove('active'); }
+      }
+
+      const redoBtn = document.getElementById('redoBtn');
+      const redoCounter = document.getElementById('redoCount');
+      if (redoCounter) redoCounter.innerText = redoStack.length;
+      if (redoBtn) {
+        if (redoStack.length > 0) { redoBtn.classList.add('active'); } else { redoBtn.classList.remove('active'); }
       }
     }
 
@@ -290,7 +368,7 @@
       }).then(function (mappedCards) { 
         cardList = mappedCards; 
         renderCombinedGrid(); 
-        updateUndoButtonUI(); 
+        updateHistoryButtonsUI(); 
       }).catch(function(err) { 
         renderCombinedGrid(); 
       });
