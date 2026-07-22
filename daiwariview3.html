@@ -33,13 +33,12 @@
     
     .main-layout { display: flex; flex-direction: column; gap: 16px; position: relative; }
     
-    /* 🌟 グリッド（ピンク部分の区切りを20pxに広げる） */
-    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 20px; row-gap: 24px; }
+    /* 🌟 ピンクの縦横線を2px縮小 (横18px / 縦22px) */
+    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 18px; row-gap: 22px; }
     
     .page-box { background: #fff; border: 2px dashed #666; border-radius: 4px; min-height: 160px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 6px; position: relative; transition: background 0.15s ease; }
     .page-box.mihiraki-combined { grid-column: span 2; border: 2px solid #0079bf; background: #fafbfc; gap: 2px; padding: 4px; }
     
-    /* 🌟 見開きペア（青い線側）の隙間をキュッと詰める指定 */
     .page-box.pair-left { margin-right: -18px; padding-right: 10px; z-index: 2; }
     .page-box.pair-right { margin-left: -18px; padding-left: 10px; z-index: 1; }
     
@@ -51,7 +50,8 @@
     .trello-card.dragging { opacity: 0.4; border: 1px dashed #999; }
     .trello-card.selected { border: 2px solid #0079bf !important; background: #e6f7ff !important; box-shadow: 0 0 8px rgba(0,121,191,0.4); }
 
-    .card-area-badge { display: block; font-size: 10px; font-weight: bold; padding: 2px 4px; text-align: center; color: #172b4d; background: #dfe1e6; pointer-events: none; cursor: inherit; }
+    /* 🌟 エリア文字サイズを少し大きく (10px ➔ 12px) 変更 */
+    .card-area-badge { display: block; font-size: 12px; font-weight: bold; padding: 3px 4px; text-align: center; color: #172b4d; background: #dfe1e6; pointer-events: none; cursor: inherit; }
     .area-東北 { background: #ffe166 !important; color: #403000 !important; }
     .area-北海道 { background: #b3ffcc !important; color: #005c1e !important; }
     .area-関東 { background: #ffbdad !important; color: #5c0000 !important; }
@@ -79,8 +79,8 @@
     .badge-label-item { padding: 1px 5px; border-radius: 3px; font-weight: bold; display: inline-block; white-space: nowrap; font-size: 11px; }
     .badge-tantou { background: #e6fcff; color: #006677; border: 1px solid #b3f0ff; }
     
-    /* 🌟 責了・校了の独立バッジスタイル */
-    .badge-sekiryou { background: #ff4757; color: #ffffff; }
+    /* 🌟 責了ラベルの色を「黒色 (#2f3542)」に変更 */
+    .badge-sekiryou { background: #2f3542; color: #ffffff; }
     .badge-kouryou { background: #2ed573; color: #ffffff; }
 
     .card-footer { display: flex; justify-content: flex-end; margin-top: 4px; padding: 2px 4px 0 4px; border-top: 1px dashed #ebecf0; pointer-events: none; cursor: inherit; }
@@ -332,7 +332,6 @@
           skippedPages.add(nextPage); createCardElement(mihirakiCard, box); grid.appendChild(box); continue;
         }
         
-        /* 🌟 左右ペア（見開き位置）を判定してクラス（pair-left / pair-right）を付与 */
         box.className = 'page-box ' + (i % 2 === 0 ? 'pair-left' : 'pair-right'); 
         box.setAttribute('data-page', p);
         box.innerHTML = `<div class="page-title">${p === 'H1' ? '表紙(H1)' : p === 'H4' ? '裏表紙(H4)' : p + ' P'}</div>`;
@@ -404,7 +403,6 @@
           card.labels.forEach(l => { 
             const lName = String(l.name || '').trim();
             if (lName.endsWith('様')) { tantouName = lName; }
-            /* 🌟 「責了」「校了」ラベルを独立して取得 */
             if (lName === '責了' || lName === '校了') { sekiryouLabel = lName; }
           });
         }
@@ -445,7 +443,6 @@
       });
       wrapper.appendChild(pencil); innerContainer.appendChild(wrapper);
 
-      /* 🌟 担当者バッジ ＋ 責了/校了バッジの並び表示 */
       if (tantouName || sekiryouLabel) {
         const badgeLine = document.createElement('div'); badgeLine.className = 'badge-info-line';
         if (tantouName) {
