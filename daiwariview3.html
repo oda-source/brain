@@ -33,25 +33,32 @@
     
     .main-layout { display: flex; flex-direction: column; gap: 16px; position: relative; }
     
-    /* 🌟 ピンクの縦横線を2px縮小 (横18px / 縦22px) */
-    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 18px; row-gap: 22px; }
+    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 15px; row-gap: 19px; }
     
-    .page-box { background: #fff; border: 2px dashed #666; border-radius: 4px; min-height: 160px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 6px; position: relative; transition: background 0.15s ease; }
+    /* 🌟 ページ枠の設定 */
+    .page-box { background: #fff; border: 2px dashed #666; border-radius: 4px; min-height: 160px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; position: relative; transition: background 0.15s ease; }
     .page-box.mihiraki-combined { grid-column: span 2; border: 2px solid #0079bf; background: #fafbfc; gap: 2px; padding: 4px; }
     
-    .page-box.pair-left { margin-right: -18px; padding-right: 10px; z-index: 2; }
-    .page-box.pair-right { margin-left: -18px; padding-left: 10px; z-index: 1; }
+    .page-box.pair-left { margin-right: -15px; padding-right: 8px; z-index: 2; }
+    .page-box.pair-right { margin-left: -15px; padding-left: 8px; z-index: 1; }
     
     .page-box.drag-over { background: #e6f7ff !important; border: 2px dashed #0079bf !important; }
-    .page-title { font-weight: bold; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 2px; margin-bottom: 2px; color: #5e6c84; text-align: center; pointer-events: none; }
+    .page-title { width: 100%; font-weight: bold; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 2px; margin-bottom: 2px; color: #5e6c84; text-align: center; pointer-events: none; }
     
-    .trello-card { background: #fff; border: 1px solid #ced4da; border-radius: 4px; padding: 0 0 4px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 11px; overflow: hidden; display: flex; flex-direction: column; width: 100%; position: relative; cursor: grab !important; margin-bottom: 4px; user-select: none; }
+    /* 基本カード設定 */
+    .trello-card { background: #fff; border: 1px solid #ced4da; border-radius: 4px; padding: 0 0 4px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 11px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; position: relative; cursor: grab !important; margin-bottom: 4px; user-select: none; }
     .trello-card:active { cursor: grabbing !important; }
     .trello-card.dragging { opacity: 0.4; border: 1px dashed #999; }
     .trello-card.selected { border: 2px solid #0079bf !important; background: #e6f7ff !important; box-shadow: 0 0 8px rgba(0,121,191,0.4); }
 
-    /* 🌟 エリア文字サイズを少し大きく (10px ➔ 12px) 変更 */
-    .card-area-badge { display: block; font-size: 14px; font-weight: bold; padding: 3px 4px; text-align: center; color: #172b4d; background: #dfe1e6; pointer-events: none; cursor: inherit; line-height: 1.2; }
+    /* 🌟 大文字（A,B,C）＝ 縦積み用（横幅100%） */
+    .trello-card.layout-vertical { flex: 1 1 100%; width: 100%; }
+    
+    /* 🌟 小文字（a,b,c）＝ 横並び用（横幅 50%） */
+    .trello-card.layout-horizontal { flex: 1 1 calc(50% - 4px); width: calc(50% - 4px); }
+
+    /* エリアバッジ文字サイズ */
+    .card-area-badge { display: block; font-size: 14px; font-weight: bold; padding: 4px 6px; text-align: center; color: #172b4d; background: #dfe1e6; pointer-events: none; cursor: inherit; line-height: 1.2; }
     .area-東北 { background: #ffe166 !important; color: #403000 !important; }
     .area-北海道 { background: #b3ffcc !important; color: #005c1e !important; }
     .area-関東 { background: #ffbdad !important; color: #5c0000 !important; }
@@ -71,20 +78,19 @@
     .card-content { padding: 4px 6px 0 6px; flex: 1; display: flex; flex-direction: column; pointer-events: none; cursor: inherit; }
     
     .card-name-wrapper { position: relative; padding-right: 18px; margin: 2px 0; cursor: inherit; display: flex; align-items: center; }
-    .card-name { font-weight: bold; line-height: 1.2; color: #253858; word-break: break-all; font-size: 14px; cursor: inherit; display: inline-flex; align-items: center; gap: 6px; width: 100%; }
+    .card-name { font-weight: bold; line-height: 1.2; color: #253858; word-break: break-all; font-size: 13px; cursor: inherit; display: inline-flex; align-items: center; gap: 4px; width: 100%; }
     .edit-pencil-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: #0079bf; cursor: pointer !important; font-size: 10px; font-weight: bold; pointer-events: auto; }
     .edit-pencil-btn:hover { text-decoration: underline; }
     
-    .badge-info-line { display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; margin-top: 4px; }
-    .badge-label-item { padding: 1px 5px; border-radius: 3px; font-weight: bold; display: inline-block; white-space: nowrap; font-size: 11px; }
+    .badge-info-line { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; margin-top: 4px; }
+    .badge-label-item { padding: 1px 4px; border-radius: 3px; font-weight: bold; display: inline-block; white-space: nowrap; font-size: 10px; }
     .badge-tantou { background: #e6fcff; color: #006677; border: 1px solid #b3f0ff; }
     
-    /* 🌟 責了ラベルの色を「黒色 (#2f3542)」に変更 */
     .badge-sekiryou { background: #2f3542; color: #ffffff; }
     .badge-kouryou { background: #2ed573; color: #ffffff; }
 
     .card-footer { display: flex; justify-content: flex-end; margin-top: 4px; padding: 2px 4px 0 4px; border-top: 1px dashed #ebecf0; pointer-events: none; cursor: inherit; }
-    .card-member { font-size: 14px; color: #5e6c84; background: #ebecf0; padding: 1px 3px; border-radius: 2px; font-weight: bold; cursor: inherit; }
+    .card-member { font-size: 11px; color: #5e6c84; background: #ebecf0; padding: 1px 3px; border-radius: 2px; font-weight: bold; cursor: inherit; }
     
     .board-approval-section { grid-column: span 5; background: #ffffff; border: 3px solid #0079bf; border-radius: 6px; padding: 12px 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 10px; align-self: start; }
     .board-approval-title { font-size: 18px; font-weight: bold; color: #0079bf; margin: 0; border-bottom: 2px solid #ebecf0; padding-bottom: 6px; }
@@ -276,7 +282,8 @@
           }
 
           return t.get(c.id, 'shared', 'daiwari_page_num', '').then(savedVal => {
-            c.customPageNumValue = savedVal ? savedVal.trim().toUpperCase() : '';
+            // 🌟 自動大文字化（toUpperCase）を削除し、大文字・小文字をそのまま保持
+            c.customPageNumValue = savedVal ? savedVal.trim() : '';
             if (c.customPageNumValue === '中止') { c.isFromChushiList = true; }
             return c;
           }).catch(() => { c.customPageNumValue = ''; return c; });
@@ -304,8 +311,11 @@
     }
 
     function getCleanPageNum(card) {
-      if (!card || !card.customPageNumValue) return null; let val = card.customPageNumValue.trim().toUpperCase();
-      if (val.includes('-')) return val; return val.replace(/[A-Z]$/, '');
+      if (!card || !card.customPageNumValue) return null; 
+      let val = card.customPageNumValue.trim();
+      if (val.includes('-')) return val.toUpperCase(); 
+      // 数字以外の末尾文字（大文字・小文字）を取り除いて比較用の数字にする
+      return val.replace(/[a-zA-Z]$/, '').toUpperCase();
     }
 
     function renderCombinedGrid() {
@@ -385,7 +395,14 @@
     }
 
     function createCardElement(card, targetBox) {
-      const cardEl = document.createElement('div'); cardEl.className = 'trello-card'; cardEl.id = card.id; cardEl.draggable = true; cardEl.ondragstart = dragStart; cardEl.ondragend = dragEnd;
+      const cardEl = document.createElement('div'); cardEl.id = card.id; cardEl.draggable = true; cardEl.ondragstart = dragStart; cardEl.ondragend = dragEnd;
+      
+      /* 🌟 小文字(a,b,c)が入っている場合は横並び(layout-horizontal)、それ以外は大文字(A,B,C)や未入力含め縦積み(layout-vertical) */
+      const pageVal = card.customPageNumValue || '';
+      const isHorizontal = /[a-z]/.test(pageVal); 
+      
+      cardEl.className = 'trello-card ' + (isHorizontal ? 'layout-horizontal' : 'layout-vertical');
+      
       if (selectedCardIds.has(card.id)) { cardEl.classList.add('selected'); }
 
       cardEl.addEventListener('click', function(e) {
@@ -419,12 +436,15 @@
       const innerContainer = document.createElement('div'); innerContainer.className = 'card-content';
       const wrapper = document.createElement('div'); wrapper.className = 'card-name-wrapper';
       const nameSpan = document.createElement('span'); nameSpan.className = 'card-name';
-      let displayName = (card.name || '') + ((card.customPageNumValue && /[A-Z]$/.test(card.customPageNumValue)) ? ` [${card.customPageNumValue}]` : '');
       
-      if (displayName.includes('新')) {
+      let rawName = card.name || '';
+      let isShinCourse = rawName.includes('新');
+      let displayName = rawName + ((card.customPageNumValue && /[a-zA-Z]$/.test(card.customPageNumValue)) ? ` [${card.customPageNumValue}]` : '');
+      
+      if (isShinCourse) {
         nameSpan.style.color = '#ff4757';
         nameSpan.style.fontWeight = 'bold';
-        nameSpan.innerHTML = `<span style="background:#ff4757; color:white; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold; flex-shrink:0; line-height:1.2;">新コース</span><span style="font-weight:bold; vertical-align:middle;">${displayName}</span>`;
+        nameSpan.innerHTML = `<span style="background:#ff4757; color:white; padding:1px 4px; border-radius:3px; font-size:10px; font-weight:bold; flex-shrink:0; line-height:1.2;">新コース</span><span style="font-weight:bold; vertical-align:middle;">${displayName}</span>`;
       } else { 
         nameSpan.innerText = displayName; 
       }
@@ -432,10 +452,10 @@
       
       const pencil = document.createElement('span'); pencil.className = 'edit-pencil-btn'; pencil.innerText = '✏️';
       pencil.addEventListener('click', function(e) {
-        e.stopPropagation(); const newPage = prompt('配置ページ番号を入力してください：', card.customPageNumValue || '');
+        e.stopPropagation(); const newPage = prompt('配置ページ番号を入力してください（縦積み:34A, 横並び:34a）：', card.customPageNumValue || '');
         if (newPage !== null) { 
           pushUndoSnapshot();
-          let cleanVal = newPage.trim().toUpperCase(); 
+          let cleanVal = newPage.trim(); 
           t.set(card.id, 'shared', 'daiwari_page_num', cleanVal).then(function() { 
             card.customPageNumValue = cleanVal; card.isFromChushiList = (cleanVal === '中止'); renderCombinedGrid(); 
           }); 
