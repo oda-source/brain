@@ -155,7 +155,7 @@
     let uniqueTantouNames = new Set();
     
     let undoStack = []; 
-    const MAX_UNDO_DEPTH = 2;
+    const MAX_UNDO_DEPTH = 10;
 
     function handleCardClick(e, cardId) {
       const cardEl = document.getElementById(cardId);
