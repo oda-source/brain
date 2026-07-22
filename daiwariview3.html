@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>極 DM 台割りビュー 2</title>
+  <title>極 DM 台割りビュー 3</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <style>
     body { font-family: sans-serif; background: #b0b3b8; margin: 8px; color: #172b4d; }
@@ -20,7 +20,7 @@
       .global-check-label.disabled-lock { background: #ebecf0 !important; color: #a5adba !important; }
     }
     
-    /* ヘッダーのスタイル（不要な表紙枠を削除してシンプルに調整） */
+    /* ヘッダーのスタイル */
     .header-area { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .title-zone { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     h1 { font-size: 16px; margin: 0; color: #0079bf; white-space: nowrap; }
@@ -36,10 +36,12 @@
     
     .main-layout { display: flex; flex-direction: column; gap: 16px; position: relative; }
     
-    /* 行間（縦の隙間）を24px空けて見やすく調整 */
-    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 15px; row-gap: 24px; }
+    /* 🌟 全体（ピンクの線）の横隙間を column-gap: 20px、縦隙間を row-gap: 24px に調整 */
+    .daiwari-grid { display: grid; grid-template-columns: repeat(8, 1fr); column-gap: 20px; row-gap: 24px; }
     
-    . { background: #fff; border: 2px dashed #666; border-radius: 4px; min-height: 160px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 6px; position: relative; transition: background 0.15s ease; }
+    .page-box { background: #fff; border: 2px dashed #666; border-radius: 4px; min-height: 160px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 6px; position: relative; transition: background 0.15s ease; }
+    
+    /* 🌟 見開き内（青い線）の横隙間を狭く（gap: 2px, padding: 2px）調整 */
     .page-box.mihiraki-combined { grid-column: span 2; border: 2px solid #0079bf; background: #fafbfc; gap: 2px; padding: 2px; }
     .page-box.drag-over { background: #e6f7ff !important; border: 2px dashed #0079bf !important; }
     .page-title { font-weight: bold; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 2px; margin-bottom: 2px; color: #5e6c84; text-align: center; pointer-events: none; }
@@ -65,10 +67,12 @@
     .area-シルバーウィーク { background: #96f2d7 !important; color: #08664a !important; } 
     .area-年末年始 { background: #ff91b4 !important; color: #ffffff !important; }
     .area-祭り { background: #ff9f43 !important; color: #ffffff !important; }
+    /* 🌟 責了・校了ラベル用スタイル */
+    .area-責了 { background: #ff4757 !important; color: #ffffff !important; font-weight: bold; }
+    .area-校了 { background: #2ed573 !important; color: #ffffff !important; font-weight: bold; }
     
     .card-content { padding: 4px 6px 0 6px; flex: 1; display: flex; flex-direction: column; pointer-events: none; cursor: inherit; }
     
-    /* 横並びを綺麗に保ち、鉛筆ボタンを右端に寄せるための調整 */
     .card-name-wrapper { position: relative; padding-right: 18px; margin: 2px 0; cursor: inherit; display: flex; align-items: center; }
     .card-name { font-weight: bold; line-height: 1.2; color: #253858; word-break: break-all; font-size: 14px; cursor: inherit; display: inline-flex; align-items: center; gap: 6px; width: 100%; }
     .edit-pencil-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: #0079bf; cursor: pointer !important; font-size: 10px; font-weight: bold; pointer-events: auto; }
@@ -89,7 +93,6 @@
     .global-check-label.is-checked { background: #d4edda !important; color: #155724 !important; border-color: #c3e6cb !important; }
     .global-check-label.disabled-lock { background: #ebecf0; color: #a5adba !important; border-color: #dfe1e6; cursor: not-allowed; opacity: 0.7; }
     .global-check-label.disabled-lock input { cursor: not-allowed; }
-    .global-check-label.test-badge { border: 2px dashed #ff4757; color: #ff4757; background: #fff5f5; }
 
     .extra-section { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; border-top: 3px double #dfe1e6; padding-top: 16px; }
     .extra-area-title { font-size: 13px; font-weight: bold; color: #42526e; margin: 0; }
@@ -102,7 +105,7 @@
 <body>
   <div class="header-area">
     <div class="title-zone">
-      <h1 id="boardTitle">【極】台割り配置図 2</h1>
+      <h1 id="boardTitle">【極】台割り配置図 3</h1>
       <button id="undoBtn" class="undo-btn" onclick="executeUndo()">↩️ 戻る (残り <span id="undoCount">0</span>回)</button>
     </div>
     <div class="page-setter">
@@ -225,16 +228,10 @@
 
     function toggleGlobalApproval(tantouName, checkboxEl) {
       const cleanTantou = tantouName.replace('様', '').trim();
-      let isAllowed = false;
-      if (tantouName === "テスト用(尾田・山田・小島のみ)") {
-        isAllowed = (currentTrelloUserFullName.includes("尾田孝") || currentTrelloUserFullName.includes("hhms_山田") || currentTrelloUserFullName.includes("小島大輔"));
-      } else {
-        isAllowed = currentTrelloUserFullName.includes(cleanTantou);
-      }
+      let isAllowed = currentTrelloUserFullName.includes(cleanTantou);
       
       if (!isAllowed) {
-        if (tantouName === "テスト用(尾田・山田・小島のみ)") { alert(`この枠はテスト用（尾田・山田・小島）限定です。\nあなた（${currentTrelloUserFullName || "未ログイン"}）はチェックできません。`); } 
-        else { alert(`この承認チェックは【${tantouName}】専用です。\nあなた（${currentTrelloUserFullName || "未ログイン"}）はチェックできません。`); }
+        alert(`この承認チェックは【${tantouName}】専用です。\nあなた（${currentTrelloUserFullName || "未ログイン"}）はチェックできません。`);
         checkboxEl.checked = !checkboxEl.checked; return;
       }
       
@@ -250,7 +247,7 @@
         if (member && member.fullName) currentTrelloUserFullName = member.fullName;
         return t.board('name');
       }).then(function(board) {
-        if (board && board.name) { document.getElementById('boardTitle').innerText = board.name + ' 【極・台割り配置図 2】'; }
+        if (board && board.name) { document.getElementById('boardTitle').innerText = board.name + ' 【極・台割り配置図 3】'; }
         return t.get('board', 'shared', 'customPageCount', '24');
       }).then(function(savedCount) {
         const selectEl = document.getElementById('pageSelect');
@@ -317,7 +314,7 @@
       grid.innerHTML = ''; wakugaiGrid.innerHTML = ''; chushiGrid.innerHTML = '';
       const skippedPages = new Set(); const activeCards = cardList.filter(c => !c.isFromChushiList);
 
-      // 🌟 H1 と H4 を先頭にした新しいループ用配列を作成
+      // 🌟 H4 (裏表紙) を最初、H1 (表紙) を2番目に配置
       const sortedPages = ['H4', 'H1', ...basePages.filter(p => p !== 'H1' && p !== 'H4')];
       
       for (let i = 0; i < sortedPages.length; i++) {
@@ -358,23 +355,17 @@
       const listWrapper = document.createElement('div');
       listWrapper.className = 'board-approval-list';
       
+      // 🌟 テスト用枠を完全に削除
       const sortedTantou = Array.from(uniqueTantouNames).sort();
-  
       
       const promises = sortedTantou.map(name => {
         return t.get('board', 'shared', 'approval_status_' + name, 'false').then(status => {
           const isChecked = (status === 'true');
-          let isMatch = false;
-          if (name === "テスト用(尾田・山田・小島のみ)") {
-            isMatch = (currentTrelloUserFullName.includes("尾田孝") || currentTrelloUserFullName.includes("hhms_山田") || currentTrelloUserFullName.includes("小島大輔"));
-          } else {
-            const cleanTantou = name.replace('様', '').trim();
-            isMatch = currentTrelloUserFullName.includes(cleanTantou);
-          }
+          const cleanTantou = name.replace('様', '').trim();
+          const isMatch = currentTrelloUserFullName.includes(cleanTantou);
           
           const label = document.createElement('label');
           label.className = 'global-check-label';
-          if (name === "テスト用(尾田・山田・小島のみ)") { label.classList.add('test-badge'); }
           if (!isMatch) { label.classList.add('disabled-lock'); label.title = `${name}以外は操作できません`; }
           if (isChecked) label.classList.add('is-checked');
           
@@ -405,7 +396,8 @@
       let areaName = '未設定'; let tantouName = null;
       try {
         if (card.labels && card.labels.length > 0) {
-          const areaKeywords = ['北海道', '東北', '関東', '東海', '北信越', '中部', '近畿', '中国', '中四国', '四国', '九州', '沖縄', 'シルバーウィーク', '年末年始', '祭り'];
+          // 🌟 判定キーワードに '責了' '校了' を追加
+          const areaKeywords = ['北海道', '東北', '関東', '東海', '北信越', '中部', '近畿', '中国', '中四国', '四国', '九州', '沖縄', 'シルバーウィーク', '年末年始', '祭り', '責了', '校了'];
           const primaryLabel = card.labels.find(l => l && l.name && (areaKeywords.includes(String(l.name).trim()) || String(l.name).trim().startsWith('祭り') || String(l.name).trim().startsWith('中国') || String(l.name).trim().startsWith('四国')));
           if (primaryLabel) { const pName = String(primaryLabel.name).trim(); areaName = pName.startsWith('祭り') ? '祭り' : pName; }
           card.labels.forEach(l => { if (l && l.name && String(l.name).trim().endsWith('様')) { tantouName = String(l.name).trim(); } });
@@ -413,7 +405,11 @@
       } catch(e) { areaName = '未設定'; tantouName = null; }
 
       const displayAreaName = areaName;
-      let cleanAreaClass = areaName; if (areaName.includes('中国')) cleanAreaClass = '中国'; if (areaName.includes('四国')) cleanAreaClass = '四国'; if (areaName.includes('中四国')) cleanAreaClass = '中四国';
+      let cleanAreaClass = areaName; 
+      if (areaName.includes('中国')) cleanAreaClass = '中国'; 
+      if (areaName.includes('四国')) cleanAreaClass = '四国'; 
+      if (areaName.includes('中四国')) cleanAreaClass = '中四国';
+      
       const areaHtml = `<div class="card-area-badge area-${cleanAreaClass}">${displayAreaName}</div>`; cardEl.insertAdjacentHTML('beforeend', areaHtml);
       
       const innerContainer = document.createElement('div'); innerContainer.className = 'card-content';
